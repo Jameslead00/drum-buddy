@@ -179,7 +179,7 @@ final class OnlineStore: ObservableObject {
         _ = try await Amplify.Auth.signUp(
             username: email.trimmingCharacters(in: .whitespacesAndNewlines),
             password: password,
-            options: .init(userAttributes: [.email(email.trimmingCharacters(in: .whitespacesAndNewlines))])
+            options: .init(userAttributes: [AuthUserAttribute(.email, value: email.trimmingCharacters(in: .whitespacesAndNewlines))])
         )
         throw OnlineError.unavailable("Check your email for the confirmation code, then sign in.")
     }
