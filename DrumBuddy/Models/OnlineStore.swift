@@ -161,6 +161,29 @@ final class OnlineStore: ObservableObject {
         }
     }
 
+    func signIn(email: String, password: String) async throws {
+        configure()
+        isBusy = true
+        errorMessage = nil
+        defer { isBusy = false }
+        let result = try await Amplify.Auth.signIn(username: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
+        guard result.isSignedIn else { throw OnlineError.unavailable("Finish the sign-in steps in your email, then try again.") }
+        try await syncIdentityAndProfile()
+    }
+
+    func createAccount(email: String, password: String) async throws {
+        configure()
+        isBusy = true
+        errorMessage = nil
+        defer { isBusy = false }
+        _ = try await Amplify.Auth.signUp(
+            username: email.trimmingCharacters(in: .whitespacesAndNewlines),
+            password: password,
+            options: .init(userAttributes: [.email(email.trimmingCharacters(in: .whitespacesAndNewlines))])
+        )
+        throw OnlineError.unavailable("Check your email for the confirmation code, then sign in.")
+    }
+
     func chooseRole(_ role: AccountRole, displayName: String) async throws {
         isBusy = true
         errorMessage = nil

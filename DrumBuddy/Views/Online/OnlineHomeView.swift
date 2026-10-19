@@ -6,6 +6,8 @@ struct OnlineHomeView: View {
     @EnvironmentObject private var online: OnlineStore
     @EnvironmentObject private var language: LanguageStore
     @State private var signInError: String?
+    @State private var email = ""
+    @State private var password = ""
 
     var onStartWarmUp: (OnlineAssignment) -> Void = { _ in }
 
@@ -110,6 +112,39 @@ struct OnlineHomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .disabled(online.isBusy)
 
+                HStack {
+                    Rectangle().fill(.secondary.opacity(0.2)).frame(height: 1)
+                    Text(language.language.text("oder", "or")).font(.caption).foregroundStyle(.secondary)
+                    Rectangle().fill(.secondary.opacity(0.2)).frame(height: 1)
+                }
+
+                VStack(spacing: 10) {
+                    TextField(language.language.text("E-Mail", "Email"), text: $email)
+                        .textContentType(.username)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.emailAddress)
+                        .padding(14)
+                        .background(.white.opacity(0.9))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    SecureField(language.language.text("Passwort", "Password"), text: $password)
+                        .textContentType(.password)
+                        .padding(14)
+                        .background(.white.opacity(0.9))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    HStack(spacing: 10) {
+                        Button(language.language.text("Anmelden", "Sign in")) {
+                            Task { await signIn() }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(email.isEmpty || password.count < 8 || online.isBusy)
+                        Button(language.language.text("Konto erstellen", "Create account")) {
+                            Task { await createAccount() }
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .disabled(email.isEmpty || password.count < 8 || online.isBusy)
+                    }
+                }
+
                 if online.isBusy { ProgressView() }
                 OnlineErrorMessage(message: signInError ?? online.errorMessage)
                 Text(language.language.text(
@@ -122,6 +157,16 @@ struct OnlineHomeView: View {
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func signIn() async {
+        do { signInError = nil; try await online.signIn(email: email, password: password) }
+        catch { signInError = error.localizedDescription }
+    }
+
+    private func createAccount() async {
+        do { signInError = nil; try await online.createAccount(email: email, password: password) }
+        catch { signInError = error.localizedDescription }
     }
 }
 
