@@ -89,10 +89,10 @@ private struct PracticeRecord: Decodable {
 private struct ProfileEnvelope: Decodable { let getMyProfile: OnlineProfile? }
 private struct RegisterEnvelope: Decodable { let registerProfile: OnlineProfile }
 private struct GroupsEnvelope: Decodable { let myGroups: [OnlineGroup] }
-private struct CreateGroupEnvelope: Decodable { let createGroup: OnlineGroup }
+private struct CreateGroupEnvelope: Decodable { let workspaceCreateGroup: OnlineGroup }
 private struct JoinGroupEnvelope: Decodable { let joinGroup: OnlineGroup }
-private struct WarmUpsEnvelope: Decodable { let listWarmUps: [CloudWarmUp] }
-private struct CreateWarmUpEnvelope: Decodable { let createWarmUp: CloudWarmUp }
+private struct WarmUpsEnvelope: Decodable { let workspaceListWarmUps: [CloudWarmUp] }
+private struct CreateWarmUpEnvelope: Decodable { let workspaceCreateWarmUp: CloudWarmUp }
 private struct ProgressEnvelope: Decodable { let myProgress: CloudProgress }
 private struct GroupProgressEnvelope: Decodable { let groupProgress: [StudentProgress] }
 private struct PracticeEnvelope: Decodable { let recordPractice: PracticeRecord }
@@ -205,12 +205,12 @@ final class OnlineStore: ObservableObject {
         for group in groups {
             let warmUps: WarmUpsEnvelope = try await query("""
                 query ListWarmUps($groupId: ID!) {
-                  listWarmUps(groupId: $groupId) {
+                  workspaceListWarmUps(groupId: $groupId) {
                     id groupId title instructions stepCodes bpm durationSeconds active
                   }
                 }
                 """, variables: ["groupId": group.id])
-            collected += warmUps.listWarmUps.filter(\.active).map {
+            collected += warmUps.workspaceListWarmUps.filter(\.active).map {
                 OnlineAssignment(id: $0.id, groupId: $0.groupId, title: $0.title,
                                  notes: $0.instructions ?? "", pattern: $0.stepCodes.joined(separator: " "),
                                  bpm: $0.bpm, durationSeconds: $0.durationSeconds,
@@ -241,7 +241,7 @@ final class OnlineStore: ObservableObject {
         try await runMutation {
             let _: CreateGroupEnvelope = try await self.mutate("""
                 mutation CreateGroup($name: String!) {
-                  createGroup(name: $name) { id name teacherId teacherName inviteCode memberCount }
+                  workspaceCreateGroup(name: $name) { id name teacherId teacherName inviteCode memberCount }
                 }
                 """, variables: ["name": name])
             try await self.refresh()
@@ -269,7 +269,7 @@ final class OnlineStore: ObservableObject {
             let _: CreateWarmUpEnvelope = try await self.mutate("""
                 mutation CreateWarmUp($groupId: ID!, $title: String!, $instructions: String,
                                       $stepCodes: [String!]!, $bpm: Int!, $durationSeconds: Int!) {
-                  createWarmUp(groupId: $groupId, title: $title, instructions: $instructions,
+                  workspaceCreateWarmUp(groupId: $groupId, title: $title, instructions: $instructions,
                                stepCodes: $stepCodes, bpm: $bpm, durationSeconds: $durationSeconds) {
                     id groupId title instructions stepCodes bpm durationSeconds active
                   }
