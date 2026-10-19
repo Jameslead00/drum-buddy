@@ -4,8 +4,8 @@ struct HomeView: View {
     @EnvironmentObject private var progress: ProgressStore
     @EnvironmentObject private var language: LanguageStore
 
-    private var nextExercise: Exercise {
-        Exercise.all.last(where: progress.isUnlocked) ?? Exercise.all[0]
+    private var todaySet: WarmUpSet {
+        WarmUpSet.all.last(where: progress.isUnlocked) ?? WarmUpSet.all[0]
     }
 
     var body: some View {
@@ -70,13 +70,19 @@ struct HomeView: View {
 
     private var heroCopy: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(language.language.text("Kleine Schläge machen grosse Trommler!", "Small beats make great drummers!"))
+            Text(language.language.text("Dein Warm-up für heute", "Your warm-up for today"))
                 .font(.title2.weight(.heavy))
                 .foregroundStyle(AppTheme.navy)
+            Text(todaySet.title(in: language.language))
+                .font(.headline.weight(.bold))
+                .foregroundStyle(AppTheme.mintDark)
+            Text(language.language.text("5 × 50 Sek. · 10 Sek. Pause · ca. 5 Min.", "5 × 50 sec · 10 sec breaks · about 5 min"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             NavigationLink {
-                PracticeSessionView(exercise: nextExercise)
+                PracticeSessionView(set: todaySet)
             } label: {
-                Label(language.language.text("1-Minuten-Übung starten", "Start 1-minute practice"), systemImage: "play.fill")
+                Label(language.language.text("Warm-up starten", "Start warm-up"), systemImage: "play.fill")
             }
             .buttonStyle(PrimaryButtonStyle())
         }
@@ -100,11 +106,11 @@ struct HomeView: View {
                     .scaleEffect(x: 1, y: 2, anchor: .center)
                     .padding(.vertical, 4)
                 HStack {
-                    StatPill(value: "\(progress.totalSessions)", label: language.language.text("Übungen", "Practices"), icon: "checkmark.circle.fill")
+                    StatPill(value: "\(progress.totalSessions)", label: language.language.text("Einheiten", "Sessions"), icon: "checkmark.circle.fill")
                     Spacer()
                     StatPill(value: "\(progress.currentStreak)", label: language.language.text("Tag in Folge", "Day streak"), icon: "flame.fill")
                     Spacer()
-                    StatPill(value: "\(Exercise.all.filter(progress.isUnlocked).count)", label: language.language.text("frei", "unlocked"), icon: "lock.open.fill")
+                    StatPill(value: "\(WarmUpSet.all.filter(progress.isUnlocked).count)", label: language.language.text("Sets frei", "sets unlocked"), icon: "lock.open.fill")
                 }
             }
         }

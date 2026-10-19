@@ -1,119 +1,197 @@
 import SwiftUI
 
 struct PracticeSessionView: View {
+    private enum SessionPhase {
+        case ready
+        case playing
+        case preview
+        case countIn
+        case pausedPlaying
+        case pausedTransition
+        case finished
+    }
+
     @EnvironmentObject private var progress: ProgressStore
+    @EnvironmentObject private var online: OnlineStore
     @EnvironmentObject private var language: LanguageStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var metronome = MetronomeEngine()
 
-    let exercise: Exercise
+    let set: WarmUpSet
+    @State private var blocks: [WarmUpBlock]
 
-    @State private var currentStep = 0
-    @State private var secondsRemaining = 60.0
-    @State private var showCountdown = false
-    @State private var countdown = 3
+    @State private var elapsed: TimeInterval = 0
+    @State private var savedElapsed: TimeInterval = 0
+    @State private var runStartedAt: Date?
+    @State private var activeBlockIndex = 0
+    @State private var phase: SessionPhase = .ready
+    @State private var breakStartedAt: Date?
+    @State private var breakElapsed: TimeInterval = 0
+    @State private var breakProgress: TimeInterval = 0
+    @State private var resumeCountIn = false
+    @State private var countInBeat: Int?
+    @State private var beatOffset = 0
+    @State private var currentBeat = 0
     @State private var showSuccess = false
     @State private var didLevelUp = false
-    @State private var isNewTempoRecord = false
-    @State private var runStartedAt: Date?
-    @State private var completedSeconds = 0.0
+    @State private var completionError: String?
+    @State private var savingCompletion = false
 
     private let sessionClock = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+
+    init(set: WarmUpSet, date: Date = Date()) {
+        self.set = set
+        _blocks = State(initialValue: set.blocks(for: date))
+    }
+
+    private var currentBlock: WarmUpBlock { blocks[activeBlockIndex] }
+    private var isActive: Bool {
+        phase == .playing || phase == .preview || phase == .countIn
+    }
+    private var isBetweenBlocks: Bool {
+        activeBlockIndex > 0 &&
+            (phase == .preview || phase == .countIn || phase == .pausedTransition)
+    }
+    private var displayedRemaining: TimeInterval {
+        isBetweenBlocks
+            ? WarmUpSet.breakDuration - breakProgress
+            : set.duration - elapsed
+    }
 
     var body: some View {
         ZStack {
             PageBackground()
             ScrollView {
-                VStack(spacing: 22) {
-                    sessionHeader
-                    patternStrip
+                VStack(spacing: 18) {
+                    overviewCard
+                    patternCard
                     tempoCard
-                    controls
                 }
                 .frame(maxWidth: 720)
                 .padding(20)
             }
-
-            if showCountdown { countdownOverlay }
         }
-        .navigationTitle(exercise.title(in: language.language))
+        .navigationTitle(set.title(in: language.language))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Text(timeText)
-                    .font(.headline.monospacedDigit().weight(.heavy))
-                    .foregroundStyle(secondsRemaining < 10 ? AppTheme.coral : AppTheme.navy)
-                    .accessibilityLabel(language.language.text(
-                        "Noch \(Int(secondsRemaining.rounded(.up))) Sekunden",
-                        "\(Int(secondsRemaining.rounded(.up))) seconds left"
-                    ))
-            }
-        }
         .onAppear {
-            metronome.onBeat = { beat in
-                withAnimation(.spring(response: 0.18, dampingFraction: 0.62)) {
-                    currentStep = beat % 8
-                }
-            }
+            metronome.onBeat = { beat in handleBeat(beat) }
+        }
+        .safeAreaInset(edge: .bottom) {
+            controls
+                .frame(maxWidth: 720)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(.regularMaterial)
         }
         .onReceive(sessionClock) { now in
-            guard metronome.isRunning, let runStartedAt, !showCountdown else { return }
-            let elapsed = completedSeconds + now.timeIntervalSince(runStartedAt)
-            secondsRemaining = max(0, 60 - elapsed)
-            if secondsRemaining <= 0 { finishSession() }
-        }
-        .onDisappear { metronome.stop() }
-        .sheet(isPresented: $showSuccess) {
-            SuccessView(
-                exercise: exercise,
-                didLevelUp: didLevelUp,
-                isNewTempoRecord: isNewTempoRecord,
-                achievedTempo: metronome.bpm
-            ) {
-                dismiss()
-            }
-            .environmentObject(progress)
-            .environmentObject(language)
-            .presentationDetents([.large])
-            .interactiveDismissDisabled()
-        }
-    }
-
-    private var sessionHeader: some View {
-        BuddyCard {
-            HStack(spacing: 16) {
-                Image(systemName: exercise.icon)
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(AppTheme.navy)
-                    .frame(width: 58, height: 58)
-                    .background(exercise.color)
-                    .clipShape(Circle())
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(exercise.subtitle(in: language.language))
-                        .font(.headline.weight(.heavy))
-                        .foregroundStyle(AppTheme.navy)
-                    Text(exercise.detail(in: language.language))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            switch phase {
+            case .playing:
+                guard let runStartedAt else { return }
+                let blockEnd = Double(activeBlockIndex + 1) * WarmUpSet.blockDuration
+                elapsed = min(blockEnd, savedElapsed + now.timeIntervalSince(runStartedAt))
+                if elapsed >= blockEnd {
+                    savedElapsed = blockEnd
+                    self.runStartedAt = nil
+                    if activeBlockIndex == blocks.count - 1 {
+                        finishSession()
+                    } else {
+                        advanceToNextBlock()
+                    }
                 }
-                Spacer(minLength: 0)
+            case .preview, .countIn:
+                guard activeBlockIndex > 0, let breakStartedAt else { return }
+                breakProgress = min(
+                    WarmUpSet.breakDuration,
+                    breakElapsed + now.timeIntervalSince(breakStartedAt)
+                )
+                if phase == .preview &&
+                    breakProgress >= WarmUpSet.readingDuration(at: metronome.bpm) {
+                    beginCountIn()
+                }
+            default:
+                break
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { pausePractice() }
+        }
+        .onDisappear {
+            pausePractice()
+            metronome.stop()
+            metronome.onBeat = nil
+        }
+        .sheet(isPresented: $showSuccess) {
+            WarmUpSuccessView(set: set, didLevelUp: didLevelUp) { dismiss() }
+                .environmentObject(progress)
+                .environmentObject(language)
+                .presentationDetents([.medium])
+                .interactiveDismissDisabled()
+        }
+        .alert(language.language.text("Speichern fehlgeschlagen", "Could not save progress"),
+               isPresented: Binding(get: { completionError != nil },
+                                    set: { if !$0 { completionError = nil } })) {
+            Button(language.language.text("Erneut versuchen", "Try again")) { finishSession() }
+        } message: { Text(completionError ?? "") }
+    }
+
+    private var overviewCard: some View {
+        BuddyCard {
+            VStack(spacing: 12) {
+                HStack {
+                    Text(language.language.text("Teil \(activeBlockIndex + 1)/\(blocks.count)", "Part \(activeBlockIndex + 1)/\(blocks.count)"))
+                        .font(.headline.weight(.heavy))
+                    Spacer()
+                    Text(timeText(displayedRemaining))
+                        .font(.title2.monospacedDigit().weight(.heavy))
+                        .accessibilityLabel(language.language.text(
+                            "\(isBetweenBlocks ? "Pause" : "Übung"): noch \(Int(displayedRemaining.rounded(.up))) Sekunden",
+                            "\(isBetweenBlocks ? "Break" : "Practice"): \(Int(displayedRemaining.rounded(.up))) seconds remaining"
+                        ))
+                }
+                ProgressView(value: elapsed, total: set.duration)
+                    .tint(AppTheme.mintDark)
+                    .accessibilityLabel(language.language.text("Fortschritt", "Progress"))
             }
         }
     }
 
-    private var patternStrip: some View {
+    private var patternCard: some View {
         BuddyCard {
-            DrumScoreView(
-                steps: exercise.steps,
-                currentStep: metronome.isRunning ? currentStep : nil
-            )
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(currentBlock.pattern.title(in: language.language))
+                        .font(.title2.weight(.heavy))
+                    Spacer()
+                    if let countInBeat {
+                        Text("\(countInBeat)")
+                            .font(.title2.monospacedDigit().weight(.black))
+                            .foregroundStyle(AppTheme.navy)
+                            .frame(width: 42, height: 42)
+                            .background(AppTheme.sunshine)
+                            .clipShape(Circle())
+                            .accessibilityLabel(language.language.text(
+                                "Einzählen \(countInBeat) von 4",
+                                "Count in \(countInBeat) of 4"
+                            ))
+                    } else {
+                        Color.clear
+                            .frame(width: 42, height: 42)
+                            .accessibilityHidden(true)
+                    }
+                }
+                DrumScoreView(
+                    steps: currentBlock.steps,
+                    currentStep: phase == .playing ? currentBeat : nil
+                )
+            }
         }
     }
 
     private var tempoCard: some View {
         BuddyCard {
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 HStack {
                     Label("Tempo", systemImage: "metronome.fill")
                         .font(.headline.weight(.bold))
@@ -122,192 +200,283 @@ struct PracticeSessionView: View {
                         .font(.title3.monospacedDigit().weight(.heavy))
                         .foregroundStyle(AppTheme.coral)
                 }
-                Slider(
-                    value: Binding(
-                        get: { Double(metronome.bpm) },
-                        set: { metronome.bpm = Int($0.rounded() / 5) * 5 }
-                    ),
-                    in: 40 ... 200,
-                    step: 5
-                ) { editing in
-                    if !editing { metronome.restartIfNeeded() }
-                }
-                .tint(AppTheme.coral)
-                .disabled(metronome.isRunning)
+                HStack(spacing: 14) {
+                    Button { changeTempo(by: -5) } label: {
+                        Image(systemName: "minus")
+                            .frame(width: 36, height: 36)
+                    }
+                    .disabled(metronome.bpm <= MetronomeEngine.minimumBPM)
+                    .accessibilityLabel(language.language.text("Tempo um 5 senken", "Decrease tempo by 5"))
 
-                HStack {
-                    Text(language.language.text("Langsam", "Slow"))
-                    Spacer()
-                    Text(language.language.text("Schnell", "Fast"))
+                    Slider(
+                        value: Binding(
+                            get: { Double(metronome.bpm) },
+                            set: { metronome.bpm = Int($0) }
+                        ),
+                        in: Double(MetronomeEngine.minimumBPM) ... Double(MetronomeEngine.maximumBPM),
+                        step: 5
+                    ) { editing in
+                        if !editing { restartClickAtNewTempo() }
+                    }
+                    .tint(AppTheme.coral)
+                    .accessibilityLabel("Tempo")
+
+                    Button { changeTempo(by: 5) } label: {
+                        Image(systemName: "plus")
+                            .frame(width: 36, height: 36)
+                    }
+                    .disabled(metronome.bpm >= MetronomeEngine.maximumBPM)
+                    .accessibilityLabel(language.language.text("Tempo um 5 erhöhen", "Increase tempo by 5"))
                 }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .buttonStyle(.bordered)
+                .disabled(phase == .countIn)
             }
         }
     }
 
     private var controls: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             Button {
-                metronome.isRunning ? pausePractice() : beginCountdown()
+                isActive ? pausePractice() : resumePractice()
             } label: {
                 Label(
-                    metronome.isRunning
+                    isActive
                         ? language.language.text("Pause", "Pause")
-                        : (secondsRemaining < 60
-                            ? language.language.text("Weiter geht’s", "Continue")
-                            : language.language.text("Übung starten", "Start practice")),
-                    systemImage: metronome.isRunning ? "pause.fill" : "play.fill"
+                        : (phase != .ready
+                            ? language.language.text("Fortsetzen", "Resume")
+                            : language.language.text("Warm-up starten", "Start warm-up")),
+                    systemImage: isActive ? "pause.fill" : "play.fill"
                 )
             }
             .buttonStyle(PrimaryButtonStyle())
 
-            if secondsRemaining < 60 {
-                Button(language.language.text("Neu starten", "Restart")) {
-                    metronome.stop()
-                    secondsRemaining = 60
-                    completedSeconds = 0
-                    runStartedAt = nil
-                    currentStep = 0
-                }
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(.secondary)
+            if phase != .ready {
+                Button(language.language.text("Von vorn beginnen", "Start over")) { restartPractice() }
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.secondary)
             }
         }
     }
 
-    private var countdownOverlay: some View {
-        ZStack {
-            AppTheme.navy.opacity(0.88).ignoresSafeArea()
-            VStack(spacing: 14) {
-                Image("Mascot")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 180, height: 180)
-                Text(countdown > 0 ? "\(countdown)" : language.language.text("LOS!", "GO!"))
-                    .font(.system(size: 92, weight: .black, design: .rounded))
-                    .foregroundStyle(countdown > 0 ? AppTheme.sunshine : AppTheme.mint)
-                    .contentTransition(.numericText())
-                Text(language.language.text("Sticks hoch!", "Sticks up!"))
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
-            }
-        }
-        .transition(.opacity)
+    private func timeText(_ interval: TimeInterval) -> String {
+        let seconds = max(0, Int(interval.rounded(.up)))
+        return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
-    private var timeText: String {
-        let seconds = Int(secondsRemaining.rounded(.up))
-        return String(format: "0:%02d", seconds)
-    }
-
-    private func beginCountdown() {
-        guard !showCountdown else { return }
-        countdown = 3
-        withAnimation { showCountdown = true }
-        countDownOneStep()
-    }
-
-    private func countDownOneStep() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-            if countdown > 1 {
-                withAnimation { countdown -= 1 }
-                countDownOneStep()
-            } else if countdown == 1 {
-                withAnimation { countdown = 0 }
-                countDownOneStep()
+    private func handleBeat(_ beat: Int) {
+        switch phase {
+        case .countIn:
+            if beat < WarmUpSet.countInBeats {
+                countInBeat = beat + 1
             } else {
-                withAnimation { showCountdown = false }
+                countInBeat = nil
+                beatOffset = WarmUpSet.countInBeats
+                breakStartedAt = nil
+                breakElapsed = 0
+                breakProgress = 0
+                phase = .playing
                 runStartedAt = Date()
-                metronome.start()
+                withAnimation(.spring(response: 0.18, dampingFraction: 0.62)) {
+                    currentBeat = 0
+                }
             }
+        case .playing:
+            withAnimation(.spring(response: 0.18, dampingFraction: 0.62)) {
+                currentBeat = (beat - beatOffset) % 8
+            }
+        default:
+            break
         }
+    }
+
+    private func resumePractice() {
+        switch phase {
+        case .ready:
+            beginCountIn()
+        case .pausedPlaying:
+            startPractice()
+        case .pausedTransition:
+            if resumeCountIn ||
+                breakElapsed >= WarmUpSet.readingDuration(at: metronome.bpm) {
+                beginCountIn()
+            } else {
+                phase = .preview
+                breakStartedAt = Date()
+            }
+        default:
+            break
+        }
+    }
+
+    private func startPractice() {
+        let previousPhase = phase
+        phase = .playing
+        beatOffset = 0
+        guard metronome.start() else {
+            phase = previousPhase
+            return
+        }
+        runStartedAt = Date()
     }
 
     private func pausePractice() {
-        if let runStartedAt {
-            completedSeconds += Date().timeIntervalSince(runStartedAt)
+        switch phase {
+        case .playing:
+            if let runStartedAt {
+                let blockEnd = Double(activeBlockIndex + 1) * WarmUpSet.blockDuration
+                savedElapsed = min(blockEnd, savedElapsed + Date().timeIntervalSince(runStartedAt))
+                elapsed = savedElapsed
+            }
+            self.runStartedAt = nil
+            phase = .pausedPlaying
+        case .preview:
+            if let breakStartedAt {
+                breakElapsed = min(
+                    WarmUpSet.breakDuration,
+                    breakElapsed + Date().timeIntervalSince(breakStartedAt)
+                )
+            }
+            breakProgress = breakElapsed
+            self.breakStartedAt = nil
+            resumeCountIn = false
+            phase = .pausedTransition
+        case .countIn:
+            if let breakStartedAt {
+                breakElapsed = min(
+                    WarmUpSet.breakDuration,
+                    breakElapsed + Date().timeIntervalSince(breakStartedAt)
+                )
+            }
+            breakProgress = breakElapsed
+            self.breakStartedAt = nil
+            countInBeat = nil
+            resumeCountIn = true
+            phase = .pausedTransition
+        default:
+            return
         }
+        metronome.stop()
+    }
+
+    private func advanceToNextBlock() {
+        metronome.stop()
+        activeBlockIndex += 1
+        currentBeat = 0
+        beatOffset = 0
+        countInBeat = nil
+        breakElapsed = 0
+        breakProgress = 0
+        breakStartedAt = Date()
+        resumeCountIn = false
+        phase = .preview
+    }
+
+    private func beginCountIn() {
+        if let breakStartedAt {
+            breakElapsed = min(
+                WarmUpSet.breakDuration,
+                breakElapsed + Date().timeIntervalSince(breakStartedAt)
+            )
+        }
+        breakStartedAt = activeBlockIndex > 0 ? Date() : nil
+        breakProgress = breakElapsed
+        resumeCountIn = false
+        countInBeat = nil
+        beatOffset = 0
+        phase = .countIn
+        if !metronome.start() {
+            phase = .pausedTransition
+        }
+    }
+
+    private func restartPractice() {
+        metronome.stop()
         runStartedAt = nil
-        metronome.stop(resetBeat: false)
+        breakStartedAt = nil
+        breakElapsed = 0
+        breakProgress = 0
+        resumeCountIn = false
+        countInBeat = nil
+        savedElapsed = 0
+        elapsed = 0
+        activeBlockIndex = 0
+        currentBeat = 0
+        beatOffset = 0
+        phase = .ready
+    }
+
+    private func changeTempo(by amount: Int) {
+        metronome.bpm = min(
+            MetronomeEngine.maximumBPM,
+            max(MetronomeEngine.minimumBPM, metronome.bpm + amount)
+        )
+        restartClickAtNewTempo()
+    }
+
+    private func restartClickAtNewTempo() {
+        if phase == .playing { beatOffset = 0 }
+        if !metronome.restartIfNeeded() { pausePractice() }
     }
 
     private func finishSession() {
+        guard !showSuccess, !savingCompletion else { return }
         metronome.stop()
-        guard !showSuccess else { return }
         runStartedAt = nil
-        secondsRemaining = 0
-        isNewTempoRecord = metronome.bpm > (progress.bestTempo(for: exercise) ?? 0)
-        didLevelUp = progress.complete(exercise, bpm: metronome.bpm)
-        showSuccess = true
+        phase = .finished
+        savedElapsed = set.duration
+        elapsed = set.duration
+        savingCompletion = true
+        let priorLevel = progress.level
+        Task {
+            do {
+                try await online.recordPractice(warmUpId: nil, exerciseId: set.id,
+                                                bpm: metronome.bpm, durationSeconds: Int(set.duration))
+                didLevelUp = progress.level > priorLevel
+                showSuccess = true
+            } catch {
+                completionError = error.localizedDescription
+            }
+            savingCompletion = false
+        }
     }
 }
 
-private struct SuccessView: View {
+private struct WarmUpSuccessView: View {
     @EnvironmentObject private var progress: ProgressStore
     @EnvironmentObject private var language: LanguageStore
-    let exercise: Exercise
+
+    let set: WarmUpSet
     let didLevelUp: Bool
-    let isNewTempoRecord: Bool
-    let achievedTempo: Int
     let done: () -> Void
 
     var body: some View {
         ZStack {
             PageBackground()
-            ScrollView {
-                VStack(spacing: 14) {
-                    Image("Mascot")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 132, height: 132)
-                        .accessibilityHidden(true)
-                    Text(didLevelUp
-                         ? language.language.text("NEUE STUFE!", "LEVEL UP!")
-                         : language.language.text("STARKER GROOVE!", "GREAT GROOVE!"))
-                        .font(.system(.title, design: .rounded, weight: .black))
-                        .foregroundStyle(AppTheme.navy)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.75)
-                    Text(language.language.text(
-                        "\(exercise.title(in: language.language)) geschafft · +\(exercise.rewardXP) XP",
-                        "\(exercise.title(in: language.language)) complete · +\(exercise.rewardXP) XP"
-                    ))
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if isNewTempoRecord {
-                        Label(
-                            language.language.text("Neuer Rekord: \(achievedTempo) BPM", "New record: \(achievedTempo) BPM"),
-                            systemImage: "trophy.fill"
-                        )
-                            .font(.headline.weight(.black))
-                            .foregroundStyle(AppTheme.coral)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(14)
-                            .frame(maxWidth: .infinity)
-                            .background(AppTheme.sunshine.opacity(0.2))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    if didLevelUp {
-                        Label(language.language.text(
-                            "Stufe \(progress.level) freigeschaltet!",
-                            "Level \(progress.level) unlocked!"
-                        ), systemImage: "star.fill")
-                            .font(.title3.weight(.heavy))
-                            .foregroundStyle(AppTheme.coral)
-                    }
-                    Button(language.language.text("Klasse!", "Awesome!")) { done() }
-                        .buttonStyle(PrimaryButtonStyle())
+            VStack(spacing: 18) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 70))
+                    .foregroundStyle(AppTheme.mintDark)
+                    .accessibilityHidden(true)
+                Text(language.language.text("Warm-up geschafft!", "Warm-up complete!"))
+                    .font(.title.weight(.heavy))
+                    .foregroundStyle(AppTheme.navy)
+                Text("\(set.title(in: language.language)) · +\(set.rewardXP) XP")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                if didLevelUp {
+                    Label(language.language.text(
+                        "Stufe \(progress.level) freigeschaltet!",
+                        "Level \(progress.level) unlocked!"
+                    ), systemImage: "star.fill")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(AppTheme.coral)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 26)
-                .padding(.bottom, 28)
-                .frame(maxWidth: 500)
-                .frame(maxWidth: .infinity)
+                Button(language.language.text("Fertig", "Done")) { done() }
+                    .buttonStyle(PrimaryButtonStyle())
             }
+            .multilineTextAlignment(.center)
+            .padding(24)
+            .frame(maxWidth: 500)
         }
     }
 }

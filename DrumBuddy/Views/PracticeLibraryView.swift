@@ -8,132 +8,91 @@ struct PracticeLibraryView: View {
         ZStack {
             PageBackground()
             ScrollView {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 290), spacing: 18)],
-                    spacing: 18
-                ) {
-                    ForEach(Array(Exercise.all.enumerated()), id: \.element.id) { index, exercise in
-                        exerciseCard(exercise, number: index + 1)
+                VStack(alignment: .leading, spacing: 18) {
+                    Text(language.language.text(
+                        "Jedes Set hat jeden Tag eine andere Folge. Fünf kurze Muster wärmen deine Hände in etwa fünf Minuten auf.",
+                        "Each set has a different sequence every day. Five short patterns warm up your hands in about five minutes."
+                    ))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 2)
+
+                    ForEach(WarmUpSet.all) { set in
+                        setCard(set)
                     }
                 }
-                .frame(maxWidth: 900)
+                .frame(maxWidth: 760)
                 .padding(20)
             }
         }
-        .navigationTitle(language.language.text("Dein Übungsweg", "Your Practice Path"))
+        .navigationTitle(language.language.text("Warm-up-Sets", "Warm-up Sets"))
     }
 
-    @ViewBuilder
-    private func exerciseCard(_ exercise: Exercise, number: Int) -> some View {
-        let unlocked = progress.isUnlocked(exercise)
-        BuddyCard {
+    private func setCard(_ set: WarmUpSet) -> some View {
+        let unlocked = progress.isUnlocked(set)
+        return BuddyCard {
             VStack(alignment: .leading, spacing: 15) {
-                HStack(alignment: .top) {
-                    ZStack {
-                        Circle().fill(exercise.color.opacity(unlocked ? 1 : 0.25))
-                        Image(systemName: unlocked ? exercise.icon : "lock.fill")
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(unlocked ? AppTheme.navy : .secondary)
-                    }
-                    .frame(width: 58, height: 58)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(language.language.text("STUFE \(number)", "LEVEL \(number)"))
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: unlocked ? set.icon : "lock.fill")
+                        .font(.title2.weight(.bold))
+                        .frame(width: 54, height: 54)
+                        .background(set.color.opacity(unlocked ? 1 : 0.25))
+                        .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(language.language.text("AB STUFE \(set.requiredLevel)", "FROM LEVEL \(set.requiredLevel)"))
                             .font(.caption2.weight(.black))
                             .foregroundStyle(.secondary)
-                        Text(exercise.title(in: language.language))
+                        Text(set.title(in: language.language))
                             .font(.title3.weight(.heavy))
-                            .foregroundStyle(AppTheme.navy)
-                        Text(exercise.subtitle(in: language.language))
+                        Text(set.subtitle(in: language.language))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    Spacer()
-                    if unlocked {
-                        Text("+\(exercise.rewardXP) XP")
-                            .font(.caption.weight(.bold))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 6)
-                            .background(exercise.color.opacity(0.22))
-                            .clipShape(Capsule())
-                    }
-                }
-
-                DrumScoreView(steps: exercise.steps)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .background(AppTheme.cream.opacity(0.65))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                if let bestTempo = progress.bestTempo(for: exercise) {
-                    HStack(spacing: 10) {
-                        Image(systemName: "trophy.fill")
-                            .font(.title3)
-                            .foregroundStyle(AppTheme.sunshine)
-                        Text(language.language.text(
-                            "Bestes Tempo: \(bestTempo) BPM",
-                            "Best tempo: \(bestTempo) BPM"
-                        ))
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(AppTheme.navy)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(12)
-                    .background(AppTheme.mint.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .accessibilityElement(children: .combine)
+                    Spacer(minLength: 0)
                 }
 
                 if unlocked {
+                    HStack(spacing: 8) {
+                        Label(language.language.text("5 Teile", "5 parts"), systemImage: "music.note.list")
+                        Text("·")
+                        Text(language.language.text("je 50 Sek.", "50 sec each"))
+                        Spacer()
+                        Text(language.language.text("ca. 5 Min.", "about 5 min"))
+                    }
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+
+                    let blocks = set.blocks(for: Date())
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(language.language.text("Heute:", "Today:"))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                        Text(blocks.map { $0.pattern.title(in: language.language) }.joined(separator: " · "))
+                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppTheme.cream)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+
                     NavigationLink {
-                        PracticeSessionView(exercise: exercise)
+                        PracticeSessionView(set: set)
                     } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "play.fill")
-                                .font(.subheadline.weight(.black))
-                                .foregroundStyle(AppTheme.navy)
-                                .frame(width: 38, height: 38)
-                                .background(exercise.color)
-                                .clipShape(Circle())
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(language.language.text("Übung starten", "Start practice"))
-                                    .font(.headline.weight(.heavy))
-                                Text(language.language.text("1 Minute", "1 minute"))
-                                    .font(.caption.weight(.semibold))
-                                    .opacity(0.78)
-                            }
-
+                        HStack {
+                            Label(language.language.text("Warm-up starten", "Start warm-up"), systemImage: "play.fill")
                             Spacer()
-
-                            if progress.completionCount(for: exercise) > 0 {
-                                Label(
-                                    "\(progress.completionCount(for: exercise))×",
-                                    systemImage: "checkmark.circle.fill"
-                                )
-                                .font(.caption.weight(.bold))
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 6)
-                                .background(.white.opacity(0.14))
-                                .clipShape(Capsule())
+                            if progress.completionCount(for: set) > 0 {
+                                Text("\(progress.completionCount(for: set))×")
                             }
-
                             Image(systemName: "chevron.right")
-                                .font(.subheadline.weight(.black))
                         }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 2)
                     }
                     .buttonStyle(PrimaryButtonStyle(color: AppTheme.navy))
-                    .accessibilityLabel(language.language.text(
-                        "\(exercise.title(in: language.language)) starten, eine Minute",
-                        "Start \(exercise.title(in: language.language)), one minute"
-                    ))
                 } else {
                     Label(language.language.text(
-                        "Erreiche Stufe \(exercise.requiredLevel)",
-                        "Reach level \(exercise.requiredLevel)"
+                        "Erreiche Stufe \(set.requiredLevel)",
+                        "Reach level \(set.requiredLevel)"
                     ), systemImage: "star.fill")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.secondary)
@@ -143,7 +102,6 @@ struct PracticeLibraryView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
             }
-            .opacity(unlocked ? 1 : 0.55)
         }
     }
 }

@@ -1,31 +1,19 @@
 # DrumBuddy
 
-Ein spielerischer SwiftUI-Übungsbegleiter für junge Schlagzeugerinnen und Schlagzeuger. Das MVP läuft auf iPhone und iPad, speichert den Fortschritt lokal und führt mit einem integrierten Taktgeber durch die Übungen.
+Ein SwiftUI-Begleiter für Schlagzeug-Warm-ups auf iPhone und iPad. Die Oberfläche ist auf Deutsch und Englisch verfügbar. Spracheinstellungen bleiben lokal; Konten, Gruppen, Warm-ups und Fortschritt werden über das Amplify-Backend synchronisiert.
 
-## Enthalten
+## Warm-ups
 
-- Zehn Übungsstufen: Grundschläge, Paradiddle-Varianten, Viertelpausen und Akzente
-- Geführte Ein-Minuten-Einheiten mit animierten Handzeichen
-- Sample-genauer 4/4-Taktgeber mit einem hohen und drei tiefen Viertel-Klicks
-- Einstellbares Übungstempo von 40–200 BPM
-- Umschaltbare deutsche und englische Oberfläche; die gewählte Sprache wird lokal gespeichert
-- Reines Audio-Metronom ohne Vibration
-- XP, Stufen, Freischaltungen, Übungsanzahl und der persönliche Tempo-Rekord jeder Übung lokal in `UserDefaults`
-- Flexible Darstellung für iPhone und iPad inklusive Bedienungshilfen
+- Fünf Sets werden auf Stufe 1, 3, 5, 7 und 9 freigeschaltet.
+- Jedes Set hat sieben Tagesfolgen. Montag bis Sonntag erscheinen unterschiedliche Muster und Reihenfolgen; die Folge bleibt am selben Tag stabil.
+- Eine Folge besteht aus fünf Blöcken à 50 Sekunden. Zwischen den Blöcken liegen jeweils zehn Sekunden Pause inklusive Einzählen; zusammen dauert die Folge etwa fünf Minuten. Jeder Block zeigt genau zwei Takte, die bis zum nächsten Block wiederholt werden.
+- Zu Beginn zählt der Metronomklick bei aktuellem Tempo vier Schläge ein. In den Pausen erscheinen die nächsten zwei Takte zuerst ohne Klick; die letzten vier Schläge werden bei aktuellem Tempo eingezählt. Die Einzählzahl steht klein neben den Noten.
+- Die Notenmarkierung folgt dem hörbaren Klick. Schlag eins nach dem Einzählen startet den jeweiligen Block.
+- Das Metronomtempo lässt sich während einer laufenden Einheit per Regler oder in 5-BPM-Schritten zwischen 60 und 280 BPM ändern. Der Klick startet beim Tempowechsel neu auf Schlag eins.
+- Pausieren hält die Übungszeit an. Beim Verlassen der App wird eine laufende Einheit pausiert. XP werden nur für eine vollständig abgeschlossene Folge vergeben.
 
-## Übungen bearbeiten
-
-Die Übungen stehen direkt in `DrumBuddy/Models/Exercise.swift` im Array `Exercise.all`; es gibt aktuell keine JSON-Datei. Jede Übung definiert dort:
-
-- deutsche und englische Texte
-- das Notenmuster mit `.r`, `.l`, `.pause`, `.accentR` und `.accentL`
-- die benötigte Stufe und die XP-Belohnung
-- Farbe und Symbol
-
-Eine neue Übung wird einfach als weiterer `Exercise(...)`-Eintrag im Array ergänzt. Die Stufe wird automatisch über `requiredLevel` freigeschaltet.
+Die Sets und Muster stehen in `DrumBuddy/Models/WarmUp.swift`. Dort können die Pattern, Stufen und Blocklängen angepasst werden. Die älteren Einzelübungsdaten in `Exercise.swift` bleiben zur Kompatibilität mit gespeichertem Fortschritt erhalten.
 
 ## Starten
 
-`DrumBuddy.xcodeproj` in Xcode öffnen, einen iPhone- oder iPad-Simulator auswählen und auf „Ausführen“ drücken.
-
-Das Mindestziel ist iOS 17.0. Das Projekt benötigt weder externe Abhängigkeiten noch ein Backend.
+`DrumBuddy.xcodeproj` in Xcode öffnen, ein iPhone- oder iPad-Ziel auswählen und auf „Ausführen“ drücken. Mindestziel: iOS 17.0. Für die Online-Funktionen muss die Produktionsdatei `amplify_outputs.json` aus dem Amplify-Backend im App-Bundle liegen. Die App verwendet Amplify Swift und RevenueCat.

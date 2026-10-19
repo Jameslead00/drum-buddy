@@ -20,6 +20,16 @@
 		A1000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* Assets.xcassets */; };
 		A1000000000000000000000E /* DrumScoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* DrumScoreView.swift */; };
 		A1000000000000000000000F /* LanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* LanguageStore.swift */; };
+		A10000000000000000000010 /* WarmUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* WarmUp.swift */; };
+		A20000000000000000000001 /* OnlineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* OnlineStore.swift */; };
+		A20000000000000000000002 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* SubscriptionStore.swift */; };
+		A20000000000000000000003 /* OnlineHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* OnlineHomeView.swift */; };
+		A20000000000000000000004 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* SubscriptionView.swift */; };
+		A20000000000000000000005 /* CustomWarmUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* CustomWarmUpView.swift */; };
+		A20000000000000000000006 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = J20000000000000000000001 /* Amplify */; };
+		A20000000000000000000007 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = J20000000000000000000002 /* AWSCognitoAuthPlugin */; };
+		A20000000000000000000008 /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = J20000000000000000000003 /* AWSAPIPlugin */; };
+		A20000000000000000000009 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = J20000000000000000000004 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +47,12 @@
 		B1000000000000000000000D /* DrumBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrumBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1000000000000000000000E /* DrumScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrumScoreView.swift; sourceTree = "<group>"; };
 		B1000000000000000000000F /* LanguageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageStore.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* WarmUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmUp.swift; sourceTree = "<group>"; };
+		B20000000000000000000001 /* OnlineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlineStore.swift; sourceTree = "<group>"; };
+		B20000000000000000000002 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
+		B20000000000000000000003 /* OnlineHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlineHomeView.swift; sourceTree = "<group>"; };
+		B20000000000000000000004 /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
+		B20000000000000000000005 /* CustomWarmUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWarmUpView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +60,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000000000000000000006 /* Amplify in Frameworks */,
+				A20000000000000000000007 /* AWSCognitoAuthPlugin in Frameworks */,
+				A20000000000000000000008 /* AWSAPIPlugin in Frameworks */,
+				A20000000000000000000009 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +97,9 @@
 				B10000000000000000000003 /* Exercise.swift */,
 				B10000000000000000000004 /* ProgressStore.swift */,
 				B1000000000000000000000F /* LanguageStore.swift */,
+				B10000000000000000000010 /* WarmUp.swift */,
+				B20000000000000000000001 /* OnlineStore.swift */,
+				B20000000000000000000002 /* SubscriptionStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -96,6 +119,7 @@
 				B10000000000000000000007 /* HomeView.swift */,
 				B10000000000000000000008 /* PracticeLibraryView.swift */,
 				B10000000000000000000009 /* PracticeSessionView.swift */,
+				D20000000000000000000001 /* Online */,
 				D10000000000000000000006 /* Components */,
 			);
 			path = Views;
@@ -126,6 +150,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D20000000000000000000001 /* Online */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000003 /* OnlineHomeView.swift */,
+				B20000000000000000000004 /* SubscriptionView.swift */,
+				B20000000000000000000005 /* CustomWarmUpView.swift */,
+			);
+			path = Online;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -142,6 +176,12 @@
 			dependencies = (
 			);
 			name = DrumBuddy;
+			packageProductDependencies = (
+				J20000000000000000000001 /* Amplify */,
+				J20000000000000000000002 /* AWSCognitoAuthPlugin */,
+				J20000000000000000000003 /* AWSAPIPlugin */,
+				J20000000000000000000004 /* RevenueCat */,
+			);
 			productName = DrumBuddy;
 			productReference = B1000000000000000000000D /* DrumBuddy.app */;
 			productType = "com.apple.product-type.application";
@@ -170,6 +210,10 @@
 				Base,
 			);
 			mainGroup = D10000000000000000000001;
+			packageReferences = (
+				I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */,
+				I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			productRefGroup = D10000000000000000000008 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -207,6 +251,12 @@
 				A1000000000000000000000B /* LevelBadge.swift in Sources */,
 				A1000000000000000000000E /* DrumScoreView.swift in Sources */,
 				A1000000000000000000000F /* LanguageStore.swift in Sources */,
+				A10000000000000000000010 /* WarmUp.swift in Sources */,
+				A20000000000000000000001 /* OnlineStore.swift in Sources */,
+				A20000000000000000000002 /* SubscriptionStore.swift in Sources */,
+				A20000000000000000000003 /* OnlineHomeView.swift in Sources */,
+				A20000000000000000000004 /* SubscriptionView.swift in Sources */,
+				A20000000000000000000005 /* CustomWarmUpView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,7 +374,8 @@
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = JK994CCR8B;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DrumBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DrumBuddy;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
@@ -336,6 +387,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jamesleadbeater.DrumBuddy;
+				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -352,7 +404,8 @@
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = JK994CCR8B;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DrumBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DrumBuddy;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
@@ -364,6 +417,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jamesleadbeater.DrumBuddy;
+				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -393,6 +447,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
+			requirement = { kind = upToNextMajorVersion; minimumVersion = 2.58.1; };
+		};
+		I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = { kind = upToNextMajorVersion; minimumVersion = 5.81.1; };
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		J20000000000000000000001 /* Amplify */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = Amplify; };
+		J20000000000000000000002 /* AWSCognitoAuthPlugin */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = AWSCognitoAuthPlugin; };
+		J20000000000000000000003 /* AWSAPIPlugin */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = AWSAPIPlugin; };
+		J20000000000000000000004 /* RevenueCat */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */; productName = RevenueCat; };
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F10000000000000000000001 /* Project object */;
 }

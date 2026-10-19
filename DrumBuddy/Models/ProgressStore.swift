@@ -8,6 +8,7 @@ final class ProgressStore: ObservableObject {
         static let completions = "drumbuddy.completions"
         static let bestTempos = "drumbuddy.bestTempos"
         static let lastPractice = "drumbuddy.lastPractice"
+        static let warmUpCompletions = "drumbuddy.warmUpCompletions"
     }
 
     @Published private(set) var xp: Int
@@ -15,6 +16,7 @@ final class ProgressStore: ObservableObject {
     @Published private(set) var completions: [String: Int]
     @Published private(set) var bestTempos: [String: Int]
     @Published private(set) var lastPractice: Date?
+    @Published private(set) var warmUpCompletions: [String: Int]
 
     private let defaults: UserDefaults
 
@@ -25,6 +27,7 @@ final class ProgressStore: ObservableObject {
         completions = defaults.dictionary(forKey: Keys.completions) as? [String: Int] ?? [:]
         bestTempos = defaults.dictionary(forKey: Keys.bestTempos) as? [String: Int] ?? [:]
         lastPractice = defaults.object(forKey: Keys.lastPractice) as? Date
+        warmUpCompletions = defaults.dictionary(forKey: Keys.warmUpCompletions) as? [String: Int] ?? [:]
     }
 
     var level: Int { max(1, xp / 50 + 1) }
@@ -37,6 +40,24 @@ final class ProgressStore: ObservableObject {
 
     func isUnlocked(_ exercise: Exercise) -> Bool {
         level >= exercise.requiredLevel
+    }
+
+    func isUnlocked(_ set: WarmUpSet) -> Bool {
+        level >= set.requiredLevel
+    }
+
+    func completionCount(for set: WarmUpSet) -> Int {
+        warmUpCompletions[set.id, default: 0]
+    }
+
+    func complete(_ set: WarmUpSet) -> Bool {
+        let oldLevel = level
+        xp += set.rewardXP
+        totalSessions += 1
+        warmUpCompletions[set.id, default: 0] += 1
+        lastPractice = Date()
+        persist()
+        return level > oldLevel
     }
 
     func completionCount(for exercise: Exercise) -> Int {
@@ -65,5 +86,29 @@ final class ProgressStore: ObservableObject {
         defaults.set(completions, forKey: Keys.completions)
         defaults.set(bestTempos, forKey: Keys.bestTempos)
         defaults.set(lastPractice, forKey: Keys.lastPractice)
+        defaults.set(warmUpCompletions, forKey: Keys.warmUpCompletions)
+    }
+
+    func applyCloud(xp: Int, totalSessions: Int, completions: [String: Int],
+                    bestTempos: [String: Int], lastPractice: Date?) {
+        self.xp = max(0, xp)
+        self.totalSessions = max(0, totalSessions)
+        self.completions = completions
+        self.bestTempos = bestTempos
+        self.lastPractice = lastPractice
+        self.warmUpCompletions = completions.filter { entry in
+            WarmUpSet.all.contains(where: { $0.id == entry.key })
+        }
+        persist()
+    }
+
+    func resetForSignOut() {
+        xp = 0
+        totalSessions = 0
+        completions = [:]
+        bestTempos = [:]
+        lastPractice = nil
+        warmUpCompletions = [:]
+        persist()
     }
 }

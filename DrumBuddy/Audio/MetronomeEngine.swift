@@ -3,10 +3,11 @@ import UIKit
 
 @MainActor
 final class MetronomeEngine: NSObject, ObservableObject {
+    static let minimumBPM = 60
+    static let maximumBPM = 280
+
     @Published var bpm: Int = 80
     @Published private(set) var isRunning = false
-    @Published private(set) var beatIndex = 0
-
     var onBeat: ((Int) -> Void)?
 
     private let audioEngine = AVAudioEngine()
@@ -21,50 +22,49 @@ final class MetronomeEngine: NSObject, ObservableObject {
         prepareAudio()
     }
 
-    func start() {
-        stop(resetBeat: false)
+    @discardableResult
+    func start() -> Bool {
+        stop()
 
         // Re-activate the playback session for every run. This recovers cleanly
         // after phone calls, Siri, route changes, or another app taking audio.
-        guard activateAudioSession() else { return }
-        guard let measure = makeMeasureBuffer() else { return }
+        guard activateAudioSession() else { return false }
+        guard let measure = makeMeasureBuffer() else { return false }
 
         if !audioEngine.isRunning {
             audioEngine.prepare()
             do {
                 try audioEngine.start()
             } catch {
-                return
+                return false
             }
         }
         player.scheduleBuffer(measure, at: nil, options: [.loops])
         player.play()
 
         isRunning = true
-        beatIndex = 0
         lastReportedTick = 0
-        reportBeat(tick: 0)
-
+        onBeat?(0)
         let link = CADisplayLink(target: self, selector: #selector(updateVisualBeat))
         link.add(to: .main, forMode: .common)
         displayLink = link
+        return true
     }
 
-    func stop(resetBeat: Bool = true) {
+    func stop() {
         displayLink?.invalidate()
         displayLink = nil
         player.stop()
         isRunning = false
-        if resetBeat { beatIndex = 0 }
     }
 
-    func restartIfNeeded() {
-        guard isRunning else { return }
-        start()
+    @discardableResult
+    func restartIfNeeded() -> Bool {
+        guard isRunning else { return true }
+        return start()
     }
 
-    /// Reads the audio sample clock only for the animated score. The click
-    /// itself runs independently of the main/UI thread.
+    /// The score follows the audio sample clock, rather than an independent timer.
     @objc private func updateVisualBeat() {
         guard
             isRunning,
@@ -75,11 +75,6 @@ final class MetronomeEngine: NSObject, ObservableObject {
         let tick = Int(playerTime.sampleTime / quarterNoteFrameCount)
         guard tick != lastReportedTick else { return }
         lastReportedTick = tick
-        reportBeat(tick: tick)
-    }
-
-    private func reportBeat(tick: Int) {
-        beatIndex = tick % 4
         onBeat?(tick)
     }
 
