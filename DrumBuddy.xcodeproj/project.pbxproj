@@ -18,10 +18,10 @@
 		A10000000000000000000009 /* PracticeSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* PracticeSessionView.swift */; };
 		A1000000000000000000000B /* LevelBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000B /* LevelBadge.swift */; };
 		A1000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* Assets.xcassets */; };
-		A10000000000000000000011 /* amplify_outputs.json in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* amplify_outputs.json */; };
 		A1000000000000000000000E /* DrumScoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* DrumScoreView.swift */; };
 		A1000000000000000000000F /* LanguageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* LanguageStore.swift */; };
 		A10000000000000000000010 /* WarmUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* WarmUp.swift */; };
+		A10000000000000000000011 /* amplify_outputs.json in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* amplify_outputs.json */; };
 		A20000000000000000000001 /* OnlineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* OnlineStore.swift */; };
 		A20000000000000000000002 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* SubscriptionStore.swift */; };
 		A20000000000000000000003 /* OnlineHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* OnlineHomeView.swift */; };
@@ -49,12 +49,12 @@
 		B1000000000000000000000E /* DrumScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrumScoreView.swift; sourceTree = "<group>"; };
 		B1000000000000000000000F /* LanguageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageStore.swift; sourceTree = "<group>"; };
 		B10000000000000000000010 /* WarmUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmUp.swift; sourceTree = "<group>"; };
+		B10000000000000000000011 /* amplify_outputs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplify_outputs.json; sourceTree = "<group>"; };
 		B20000000000000000000001 /* OnlineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlineStore.swift; sourceTree = "<group>"; };
 		B20000000000000000000002 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
 		B20000000000000000000003 /* OnlineHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlineHomeView.swift; sourceTree = "<group>"; };
 		B20000000000000000000004 /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
 		B20000000000000000000005 /* CustomWarmUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWarmUpView.swift; sourceTree = "<group>"; };
-		B10000000000000000000011 /* amplify_outputs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplify_outputs.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -375,24 +375,24 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = JK994CCR8B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrumBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DrumBuddy;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jamesleadbeater.DrumBuddy;
-				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -405,24 +405,24 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = JK994CCR8B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrumBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DrumBuddy;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jamesleadbeater.DrumBuddy;
-				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REVENUECAT_PUBLIC_KEY = appl_LUuxXHNvTFTUstiRHiJHokYKMru;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -456,20 +456,42 @@
 		I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
-			requirement = { kind = upToNextMajorVersion; minimumVersion = 2.58.1; };
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.58.1;
+			};
 		};
 		I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
-			requirement = { kind = upToNextMajorVersion; minimumVersion = 5.81.1; };
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.81.1;
+			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		J20000000000000000000001 /* Amplify */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = Amplify; };
-		J20000000000000000000002 /* AWSCognitoAuthPlugin */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = AWSCognitoAuthPlugin; };
-		J20000000000000000000003 /* AWSAPIPlugin */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */; productName = AWSAPIPlugin; };
-		J20000000000000000000004 /* RevenueCat */ = {isa = XCSwiftPackageProductDependency; package = I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */; productName = RevenueCat; };
+		J20000000000000000000001 /* Amplify */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = Amplify;
+		};
+		J20000000000000000000002 /* AWSCognitoAuthPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSCognitoAuthPlugin;
+		};
+		J20000000000000000000003 /* AWSAPIPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = I20000000000000000000001 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSAPIPlugin;
+		};
+		J20000000000000000000004 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = I20000000000000000000002 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F10000000000000000000001 /* Project object */;
